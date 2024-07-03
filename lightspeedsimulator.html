@@ -1,0 +1,783 @@
+<html><head><base href="https://starfield-with-speed-control.game"><title>Starfield Explorer - Warp Edition</title>
+    <style>
+        body, html {
+            margin: 0;
+            padding: 0;
+            height: 100%;
+            overflow: hidden;
+            font-family: 'Arial', sans-serif;
+            background-color: #000;
+            color: #fff;
+        }
+        #starfield {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+        }
+        #controls {
+            position: absolute;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background-color: rgba(0,20,40,0.7);
+            padding: 20px;
+            border-radius: 15px;
+            display: flex;
+            align-items: center;
+            box-shadow: 0 0 15px rgba(0, 155, 255, 0.5);
+            z-index: 10;
+        }
+        .slider {
+            width: 300px;
+            margin: 0 20px;
+            -webkit-appearance: none;
+            background: linear-gradient(to right, #00a8ff, #0055ff);
+            outline: none;
+            border-radius: 15px;
+            height: 10px;
+        }
+        .slider::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 25px;
+            height: 25px;
+            background: #fff;
+            cursor: pointer;
+            border-radius: 50%;
+        }
+        label, button {
+            margin: 0 10px;
+            color: #fff;
+            font-size: 18px;
+        }
+        button {
+            background: linear-gradient(45deg, #00a8ff, #0055ff);
+            border: none;
+            color: white;
+            padding: 15px 30px;
+            text-align: center;
+            text-decoration: none;
+            display: inline-block;
+            font-size: 18px;
+            margin: 4px 2px;
+            cursor: pointer;
+            border-radius: 25px;
+            transition: all 0.3s ease;
+            text-shadow: 0 0 5px rgba(255,255,255,0.5);
+            box-shadow: 0 0 15px rgba(0, 155, 255, 0.5);
+        }
+        button:hover {
+            transform: scale(1.05);
+            box-shadow: 0 0 25px rgba(0, 155, 255, 0.8);
+        }
+        #warp-speed {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background-color: rgba(0,20,40,0.7);
+            padding: 15px;
+            border-radius: 15px;
+            font-size: 24px;
+            font-weight: bold;
+            box-shadow: 0 0 15px rgba(0, 155, 255, 0.5);
+            z-index: 10;
+        }
+        #stats {
+            position: absolute;
+            top: 100px;
+            right: 20px;
+            background-color: rgba(0,20,40,0.7);
+            padding: 15px;
+            border-radius: 15px;
+            font-size: 18px;
+            box-shadow: 0 0 15px rgba(0, 155, 255, 0.5);
+            z-index: 10;
+        }
+        #color-picker {
+            margin: 0 10px;
+        }
+        .hud-element {
+            position: absolute;
+            background-color: rgba(0,20,40,0.7);
+            border: 2px solid #00a8ff;
+            border-radius: 10px;
+            padding: 10px;
+            color: #00a8ff;
+            font-family: 'Courier New', monospace;
+            font-size: 14px;
+            box-shadow: 0 0 10px rgba(0, 155, 255, 0.5);
+            z-index: 10;
+        }
+        #radar {
+            bottom: 20px;
+            left: 20px;
+            width: 150px;
+            height: 150px;
+            border-radius: 50%;
+        }
+        #system-status {
+            bottom: 20px;
+            right: 20px;
+            width: 200px;
+        }
+        #cockpit {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 5;
+        }
+        #cockpit::before, #cockpit::after {
+            content: '';
+            position: absolute;
+            background: linear-gradient(to bottom, rgba(0,20,40,0.7), rgba(0,20,40,0));
+        }
+        #cockpit::before {
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 15%;
+        }
+        #cockpit::after {
+            bottom: 0;
+            left: 0;
+            right: 0;
+            height: 25%;
+        }
+        #cockpit-left, #cockpit-right {
+            position: absolute;
+            top: 0;
+            bottom: 0;
+            width: 15%;
+            background: linear-gradient(to right, rgba(0,20,40,0.7), rgba(0,20,40,0));
+        }
+        #cockpit-left {
+            left: 0;
+        }
+        #cockpit-right {
+            right: 0;
+            background: linear-gradient(to left, rgba(0,20,40,0.7), rgba(0,20,40,0));
+        }
+        #star-count-input {
+            width: 60px;
+            background-color: rgba(0,20,40,0.7);
+            border: 1px solid #00a8ff;
+            color: #fff;
+            padding: 5px;
+            border-radius: 5px;
+            margin-left: 10px;
+        }
+        #lerp-controls {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            background-color: rgba(0,20,40,0.7);
+            padding: 15px;
+            border-radius: 15px;
+            font-size: 18px;
+            box-shadow: 0 0 15px rgba(0, 155, 255, 0.5);
+            z-index: 10;
+        }
+        #lerp-controls input[type="number"] {
+            width: 60px;
+            background-color: rgba(0,20,40,0.7);
+            border: 1px solid #00a8ff;
+            color: #fff;
+            padding: 5px;
+            border-radius: 5px;
+            margin-left: 10px;
+        }
+        #acceleration-graph {
+            position: absolute;
+            top: 230px;
+            left: 20px;
+            width: 300px;
+            height: 150px;
+            background-color: rgba(0,20,40,0.7);
+            border: 2px solid #00a8ff;
+            border-radius: 15px;
+            box-shadow: 0 0 15px rgba(0, 155, 255, 0.5);
+            z-index: 10;
+        }
+        #camera-controls {
+            position: absolute;
+            bottom: 100px;
+            right: 20px;
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 10px;
+        }
+        .camera-button {
+            width: 50px;
+            height: 50px;
+            background-color: rgba(0,20,40,0.7);
+            border: 2px solid #00a8ff;
+            border-radius: 10px;
+            color: #00a8ff;
+            font-size: 24px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        .camera-button:hover {
+            background-color: rgba(0,40,80,0.7);
+        }
+        #curve-type {
+            background-color: rgba(0,20,40,0.7);
+            border: 1px solid #00a8ff;
+            color: #fff;
+            padding: 5px;
+            border-radius: 5px;
+            margin-left: 10px;
+            font-size: 16px;
+        }
+    </style>
+</head>
+<body>
+    <canvas id="starfield"></canvas>
+    
+    <div id="controls">
+        <label for="speed-slider">Warp Factor:</label>
+        <input type="range" id="speed-slider" class="slider" min="0" max="10000" value="250" step="1">
+        <button id="toggle-warp">Engage Warp</button>
+        <button id="start-stop">Stop</button>
+        <label for="color-picker">Star Color:</label>
+        <input type="color" id="color-picker" value="#ffffff">
+        <label for="star-count-slider">Star Count:</label>
+        <input type="range" id="star-count-slider" class="slider" min="100" max="5000" value="2000" step="100">
+        <input type="number" id="star-count-input" value="2000" min="100" max="5000">
+    </div>
+
+    <div id="warp-speed">Warp Factor: <span id="speed-value">0.25</span></div>
+
+    <div id="stats">
+        <div>Speed: <span id="speed-au">0</span> AU/s</div>
+        <div>Distance: <span id="distance">0</span> AU</div>
+        <div>Stars Passed: <span id="stars-passed">0</span></div>
+    </div>
+
+    <div id="lerp-controls">
+        <label for="lerp-min">Min Warp:</label>
+        <input type="number" id="lerp-min" value="0" min="0" max="10000">
+        <label for="lerp-max">Max Warp:</label>
+        <input type="number" id="lerp-max" value="10000" min="0" max="10000">
+        <label for="curve-type">Acceleration Curve:</label>
+        <select id="curve-type">
+            <option value="linear">Linear</option>
+            <option value="easeInQuad">Ease In Quadratic</option>
+            <option value="easeOutQuad">Ease Out Quadratic</option>
+            <option value="easeInOutQuad">Ease In Out Quadratic</option>
+            <option value="easeInCubic">Ease In Cubic</option>
+            <option value="easeOutCubic">Ease Out Cubic</option>
+            <option value="easeInOutCubic">Ease In Out Cubic</option>
+            <option value="easeInExpo">Ease In Exponential</option>
+            <option value="easeOutExpo">Ease Out Exponential</option>
+            <option value="easeInOutExpo">Ease In Out Exponential</option>
+        </select>
+        <button id="toggle-lerp">Start LERP</button>
+        <button id="toggle-loop">Loop: Off</button>
+    </div>
+
+    <canvas id="acceleration-graph"></canvas>
+
+    <div id="radar" class="hud-element"></div>
+    <div id="system-status" class="hud-element">
+        <div>Hull Integrity: 100%</div>
+        <div>Life Support: Optimal</div>
+        <div>Shields: Active</div>
+    </div>
+
+    <div id="cockpit">
+        <div id="cockpit-left"></div>
+        <div id="cockpit-right"></div>
+    </div>
+
+    <div id="camera-controls">
+        <div></div>
+        <div class="camera-button" id="rotate-up">&#8593;</div>
+        <div></div>
+        <div class="camera-button" id="rotate-left">&#8592;</div>
+        <div></div>
+        <div class="camera-button" id="rotate-right">&#8594;</div>
+        <div></div>
+        <div class="camera-button" id="rotate-down">&#8595;</div>
+        <div></div>
+    </div>
+
+    <audio id="warp-sound" src="https://starfield-with-speed-control.game/warp.mp3" preload="auto"></audio>
+    <audio id="button-sound" src="https://starfield-with-speed-control.game/button.mp3" preload="auto"></audio>
+
+    <script>
+        const canvas = document.getElementById('starfield');
+        const ctx = canvas.getContext('2d');
+        const stars = [];
+        let speed = 2.5; // Start at Warp 0.25
+        let warpMode = false;
+        let isAnimating = true;
+        let baseStarColor = "#ffffff";
+        let distance = 0;
+        let starsPassed = 0;
+        let starCount = 2000;
+        const starSize = 1.5; // Uniform star size
+
+        const warpSound = document.getElementById('warp-sound');
+        const buttonSound = document.getElementById('button-sound');
+
+        // LERP variables
+        let isLerping = false;
+        let isLooping = false;
+        let lerpStartTime;
+        let lerpDuration = 5000; // 5 seconds
+        let lerpStartValue;
+        let lerpEndValue;
+        let lerpMinValue = 0;
+        let lerpMaxValue = 10000;
+        let currentCurveType = 'linear';
+
+        // Acceleration graph variables
+        const graphCanvas = document.getElementById('acceleration-graph');
+        const graphCtx = graphCanvas.getContext('2d');
+        const graphWidth = 300;
+        const graphHeight = 150;
+        graphCanvas.width = graphWidth;
+        graphCanvas.height = graphHeight;
+        const graphData = [];
+        const maxDataPoints = 100;
+
+        // Camera rotation variables
+        let cameraRotationX = 0;
+        let cameraRotationY = 0;
+        const rotationSpeed = 0.05;
+
+        function resizeCanvas() {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+        }
+        window.addEventListener('resize', resizeCanvas);
+        resizeCanvas();
+
+        function createStars() {
+            stars.length = 0;
+            for (let i = 0; i < starCount; i++) {
+                stars.push({
+                    x: Math.random() * canvas.width - canvas.width / 2,
+                    y: Math.random() * canvas.height - canvas.height / 2,
+                    z: Math.random() * canvas.width,
+                    color: getStarColor()
+                });
+            }
+        }
+
+        function getStarColor() {
+            const baseColor = hexToRgb(baseStarColor);
+            const r = baseColor.r;
+            const g = baseColor.g;
+            const b = baseColor.b;
+            return `rgb(${r}, ${g}, ${b})`;
+        }
+
+        function hexToRgb(hex) {
+            const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
+            return result ? {
+                r: parseInt(result[1], 16),
+                g: parseInt(result[2], 16),
+                b: parseInt(result[3], 16)
+            } : null;
+        }
+
+        createStars();
+
+        function animate() {
+            if (!isAnimating) return;
+
+            ctx.fillStyle = '#000';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+            const centerX = canvas.width / 2;
+            const centerY = canvas.height / 2;
+
+            for (let star of stars) {
+                star.z -= speed;
+
+                if (star.z <= 0) {
+                    star.z = canvas.width;
+                    star.x = Math.random() * canvas.width - canvas.width / 2;
+                    star.y = Math.random() * canvas.height - canvas.height / 2;
+                    star.color = getStarColor();
+                    starsPassed++;
+                }
+
+                let x = star.x / (star.z / canvas.width);
+                let y = star.y / (star.z / canvas.width);
+
+                // Apply camera rotation
+                const rotatedX = x * Math.cos(cameraRotationY) - y * Math.sin(cameraRotationX);
+                const rotatedY = x * Math.sin(cameraRotationY) + y * Math.cos(cameraRotationX);
+
+                x = rotatedX + centerX;
+                y = rotatedY + centerY;
+
+                ctx.fillStyle = star.color;
+                ctx.beginPath();
+                ctx.arc(x, y, starSize, 0, 2 * Math.PI);
+                ctx.fill();
+
+                if (speed > 10) {
+                    ctx.beginPath();
+                    ctx.moveTo(x, y);
+                    ctx.lineTo(x - (speed - 10) * (x - centerX) / 10, 
+                               y - (speed - 10) * (y - centerY) / 10);
+                    ctx.strokeStyle = star.color.replace('rgb', 'rgba').replace(')', ', 0.5)');
+                    ctx.stroke();
+                }
+            }
+
+            distance += speed * 0.1; // Assuming 1 speed unit is 0.1 AU/s
+
+            updateStats();
+            updateHUD();
+            updateLerp();
+            updateAccelerationGraph();
+
+            requestAnimationFrame(animate);
+        }
+
+        animate();
+
+        function updateStats() {
+            document.getElementById('speed-au').textContent = (speed * 0.1).toFixed(2);
+            document.getElementById('distance').textContent = distance.toFixed(2);
+            document.getElementById('stars-passed').textContent = starsPassed;
+        }
+
+        function updateHUD() {
+            // Update radar (just a placeholder, you could add more complex visualization)
+            const radar = document.getElementById('radar');
+            radar.innerHTML = '';
+            for (let i = 0; i < 5; i++) {
+                const dot = document.createElement('div');
+                dot.style.position = 'absolute';
+                dot.style.width = '5px';
+                dot.style.height = '5px';
+                dot.style.backgroundColor = '#00a8ff';
+                dot.style.borderRadius = '50%';
+                dot.style.left = `${Math.random() * 140}px`;
+                dot.style.top = `${Math.random() * 140}px`;
+                radar.appendChild(dot);
+            }
+        }
+
+        const speedSlider = document.getElementById('speed-slider');
+        const speedValue = document.getElementById('speed-value');
+        speedSlider.addEventListener('input', function() {
+            speed = this.value / 100;
+            speedValue.textContent = (this.value / 1000).toFixed(3);
+            updateWarpEffect();
+        });
+
+        const warpButton = document.getElementById('toggle-warp');
+        warpButton.addEventListener('click', function() {
+            buttonSound.play();
+            warpMode = !warpMode;
+            if (warpMode) {
+                speed = 10;
+                speedSlider.value = 1000;
+                this.textContent = 'Disengage Warp';
+                warpSound.play();
+            } else {
+                speed = 2.5;
+                speedSlider.value = 250;
+                this.textContent = 'Engage Warp';
+                warpSound.pause();
+                warpSound.currentTime = 0;
+            }
+            speedValue.textContent = (speedSlider.value / 1000).toFixed(3);
+            updateWarpEffect();
+        });
+
+        const startStopButton = document.getElementById('start-stop');
+        startStopButton.addEventListener('click', function() {
+            buttonSound.play();
+            isAnimating = !isAnimating;
+            if (isAnimating) {
+                this.textContent = 'Stop';
+                animate();
+            } else {
+                this.textContent = 'Start';
+            }
+        });
+
+        const colorPicker = document.getElementById('color-picker');
+        colorPicker.addEventListener('input', function() {
+            baseStarColor = this.value;
+            createStars();
+        });
+
+        const starCountSlider = document.getElementById('star-count-slider');
+        const starCountInput = document.getElementById('star-count-input');
+
+        starCountSlider.addEventListener('input', function() {
+            starCount = parseInt(this.value);
+            starCountInput.value = starCount;
+            createStars();
+        });
+
+        starCountInput.addEventListener('change', function() {
+            starCount = Math.max(100, Math.min(5000, parseInt(this.value)));
+            this.value = starCount;
+            starCountSlider.value = starCount;
+            createStars();
+        });
+
+        function updateWarpEffect() {
+            if (speed > 50) {
+                document.body.style.animation = `warpEffect ${110 - speed}s linear infinite`;
+                if (!warpSound.playing) {
+                    warpSound.play();
+                }
+            } else {
+                document.body.style.animation = 'none';
+                warpSound.pause();
+                warpSound.currentTime = 0;
+            }
+        }
+
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes warpEffect {
+                0% { filter: hue-rotate(0deg); }
+                50% { filter: hue-rotate(180deg); }
+                100% { filter: hue-rotate(360deg); }
+            }
+        `;
+        document.head.appendChild(style);
+
+        // LERP functions
+        function lerp(start, end, t) {
+            return start * (1 - t) + end * t;
+        }
+
+        // Easing functions
+        const easingFunctions = {
+            linear: t => t,
+            easeInQuad: t => t * t,
+            easeOutQuad: t => t * (2 - t),
+            easeInOutQuad: t => t < 0.5 ? 2 * t * t : -1 + (4 - 2 * t) * t,
+            easeInCubic: t => t * t * t,
+            easeOutCubic: t => (--t) * t * t + 1,
+            easeInOutCubic: t => t < 0.5 ? 4 * t * t * t : (t - 1) * (2 * t - 2) * (2 * t - 2) + 1,
+            easeInExpo: t => t === 0 ? 0 : Math.pow(2, 10 * (t - 1)),
+            easeOutExpo: t => t === 1 ? 1 : 1 - Math.pow(2, -10 * t),
+            easeInOutExpo: t => t === 0 ? 0 : t === 1 ? 1 : t < 0.5 ? Math.pow(2, 20 * t - 10) / 2 : (2 - Math.pow(2, -20 * t + 10)) / 2
+        };
+
+        function updateLerp() {
+            if (!isLerping) return;
+
+            const currentTime = Date.now();
+            let t = (currentTime - lerpStartTime) / lerpDuration;
+
+            if (t >= 1) {
+                if (isLooping) {
+                    [lerpStartValue, lerpEndValue] = [lerpEndValue, lerpStartValue];
+                    lerpStartTime = currentTime;
+                    t = 0;
+                } else {
+                    isLerping = false;
+                    t = 1;
+                }
+            }
+
+            const easedT = easingFunctions[currentCurveType](t);
+            const newValue = lerp(lerpStartValue, lerpEndValue, easedT);
+            
+            speedSlider.value = newValue;
+            speedSlider.dispatchEvent(new Event('input'));
+        }
+
+        const toggleLerpButton = document.getElementById('toggle-lerp');
+        toggleLerpButton.addEventListener('click', function() {
+            buttonSound.play();
+            isLerping = !isLerping;
+            if (isLerping) {
+                lerpStartTime = Date.now();
+                lerpStartValue = parseInt(speedSlider.value);
+                lerpEndValue = lerpMaxValue;
+                this.textContent = 'Stop LERP';
+            } else {
+                this.textContent = 'Start LERP';
+            }
+        });
+
+        const toggleLoopButton = document.getElementById('toggle-loop');
+        toggleLoopButton.addEventListener('click', function() {
+            buttonSound.play();
+            isLooping = !isLooping;
+            this.textContent = isLooping ? 'Loop: On' : 'Loop: Off';
+        });
+
+        const lerpMinInput = document.getElementById('lerp-min');
+        lerpMinInput.addEventListener('change', function() {
+            lerpMinValue = Math.max(0, Math.min(10000, parseInt(this.value)));
+            this.value = lerpMinValue;
+        });
+
+        const lerpMaxInput = document.getElementById('lerp-max');
+        lerpMaxInput.addEventListener('change', function() {
+            lerpMaxValue = Math.max(0, Math.min(10000, parseInt(this.value)));
+            this.value = lerpMaxValue;
+        });
+
+        const curveTypeSelect = document.getElementById('curve-type');
+        curveTypeSelect.addEventListener('change', function() {
+            currentCurveType = this.value;
+        });
+
+        function updateAccelerationGraph() {
+            graphData.push(speed);
+            if (graphData.length > maxDataPoints) {
+                graphData.shift();
+            }
+
+            graphCtx.fillStyle = 'rgba(0, 20, 40, 0.7)';
+            graphCtx.fillRect(0, 0, graphWidth, graphHeight);
+
+            graphCtx.strokeStyle = '#00a8ff';
+            graphCtx.lineWidth = 2;
+            graphCtx.beginPath();
+
+            const stepX = graphWidth / (maxDataPoints - 1);
+            const stepY = graphHeight / 100; // Assuming max speed is 100
+
+            for (let i = 0; i < graphData.length; i++) {
+                const x = i * stepX;
+                const y = graphHeight - graphData[i] * stepY;
+                if (i === 0) {
+                    graphCtx.moveTo(x, y);
+                } else {
+                    graphCtx.lineTo(x, y);
+                }
+            }
+
+            graphCtx.stroke();
+
+            // Draw Y-axis
+            graphCtx.strokeStyle = 'rgba(255, 255, 255, 0.5)';
+            graphCtx.lineWidth = 1;
+            graphCtx.beginPath();
+            graphCtx.moveTo(0, 0);
+            graphCtx.lineTo(0, graphHeight);
+            graphCtx.stroke();
+
+            // Draw X-axis
+            graphCtx.beginPath();
+            graphCtx.moveTo(0, graphHeight);
+            graphCtx.lineTo(graphWidth, graphHeight);
+            graphCtx.stroke();
+
+            // Add labels
+            graphCtx.fillStyle = '#ffffff';
+            graphCtx.font = '12px Arial';
+            graphCtx.fillText('Warp', 5, 15);
+            graphCtx.fillText('Time', graphWidth - 30, graphHeight - 5);
+        }
+
+        // Camera rotation functions
+        function rotateLeft() {
+            cameraRotationY -= rotationSpeed;
+        }
+
+        function rotateRight() {
+            cameraRotationY += rotationSpeed;
+        }
+
+        function rotateUp() {
+            cameraRotationX -= rotationSpeed;
+        }
+
+        function rotateDown() {
+            cameraRotationX += rotationSpeed;
+        }
+
+        // Keyboard controls
+        document.addEventListener('keydown', (event) => {
+            switch(event.key) {
+                case 'ArrowUp':
+                    rotateUp();
+                    break;
+                case 'ArrowDown':
+                    rotateDown();
+                    break;
+                case 'ArrowLeft':
+                    rotateLeft();
+                    break;
+                case 'ArrowRight':
+                    rotateRight();
+                    break;
+                case 'w':
+                    speedSlider.value = parseInt(speedSlider.value) + 100;
+                    speedSlider.dispatchEvent(new Event('input'));
+                    break;
+                case 's':
+                    speedSlider.value = Math.max(0, parseInt(speedSlider.value) - 100);
+                    speedSlider.dispatchEvent(new Event('input'));
+                    break;
+                case ' ':
+                    warpButton.click();
+                    break;
+                case 'l':
+                    toggleLerpButton.click();
+                    break;
+                case 'o':
+                    toggleLoopButton.click();
+                    break;
+            }
+        });
+
+        // On-screen camera controls
+        const rotateLeftButton = document.getElementById('rotate-left');
+        const rotateRightButton = document.getElementById('rotate-right');
+        const rotateUpButton = document.getElementById('rotate-up');
+        const rotateDownButton = document.getElementById('rotate-down');
+
+        rotateLeftButton.addEventListener('mousedown', () => {
+            rotateLeft();
+            rotateLeftInterval = setInterval(rotateLeft, 50);
+        });
+
+        rotateRightButton.addEventListener('mousedown', () => {
+            rotateRight();
+            rotateRightInterval = setInterval(rotateRight, 50);
+        });
+
+        rotateUpButton.addEventListener('mousedown', () => {
+            rotateUp();
+            rotateUpInterval = setInterval(rotateUp, 50);
+        });
+
+        rotateDownButton.addEventListener('mousedown', () => {
+            rotateDown();
+            rotateDownInterval = setInterval(rotateDown, 50);
+        });
+
+        document.addEventListener('mouseup', () => {
+            clearInterval(rotateLeftInterval);
+            clearInterval(rotateRightInterval);
+            clearInterval(rotateUpInterval);
+            clearInterval(rotateDownInterval);
+        });
+
+        document.addEventListener('mouseleave', () => {
+            clearInterval(rotateLeftInterval);
+            clearInterval(rotateRightInterval);
+            clearInterval(rotateUpInterval);
+            clearInterval(rotateDownInterval);
+        });
+    </script>
+</body></html>
